@@ -47,12 +47,13 @@ stdlib-only Fritzing design toolkit for AI agents.
 ## Requirements
 
 - Python ≥ 3.10, [uv](https://docs.astral.sh/uv/)
-- The `fz` CLI (Fritzing design toolkit) and a local Fritzing app build
-  (headless rendering). Point `FZ_BIN` at the `fz` launcher:
-
-```sh
-export FZ_BIN="$HOME/code/fritzing-ai/bin/fz"   # default
-```
+- The `fz` toolkit is bundled (`fzkit/` + `bin/fz` + `templates/`) — no
+  second repo needed. `FZ_BIN` optionally points at a different launcher.
+- Runtime data from a local Fritzing app checkout: part search needs
+  `~/code/fritzing/fritzing/parts/parts.db`, custom-part authoring needs
+  `parts/fzp_checker.py`, and headless rendering needs the Fritzing binary
+  with Qt 6 libs plus ImageMagick for PNG. Sketch create/show/check work
+  without any of it.
 
 ## Install
 
@@ -69,8 +70,7 @@ Add to your MCP client config:
   "mcpServers": {
     "fritzing": {
       "command": "uv",
-      "args": ["run", "--project", "/path/to/fritzing-mcp", "fritzing-mcp"],
-      "env": { "FZ_BIN": "/home/you/code/fritzing-ai/bin/fz" }
+      "args": ["run", "--project", "/path/to/fritzing-mcp", "fritzing-mcp"]
     }
   }
 }

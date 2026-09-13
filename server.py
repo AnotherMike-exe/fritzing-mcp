@@ -8,8 +8,8 @@ The design loop the tools support:
   new -> search_parts -> place_part -> wire -> render -> check -> open (GUI)
 
 Configuration:
-  FZ_BIN  absolute path to the `fz` launcher
-          (default: ~/code/fritzing-ai/bin/fz)
+  FZ_BIN  absolute path to a `fz` launcher (optional override; the bundled
+          toolkit's bin/fz next to this file is used by default)
 
 Run:  uv run --project . fritzing-mcp   (stdio)
 """
@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+from pathlib import Path
 from typing import Annotated
 
 from fastmcp import FastMCP
@@ -28,8 +29,8 @@ _TIMEOUT_S = 300
 
 
 def _fz() -> str:
-    path = os.environ.get("FZ_BIN") or os.path.expanduser(
-        "~/code/fritzing-ai/bin/fz")
+    path = (os.environ.get("FZ_BIN")
+            or str(Path(__file__).resolve().parent / "bin" / "fz"))
     if not os.path.isfile(path):
         raise RuntimeError(
             f"fz launcher not found at {path!r} — set FZ_BIN to the `fz` CLI")

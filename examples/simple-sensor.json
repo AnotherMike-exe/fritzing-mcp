@@ -1,0 +1,18 @@
+{
+  "title": "DHT Sensor",
+  "label": "DHT",
+  "family": "sensor",
+  "tags": ["sensor", "temperature", "humidity"],
+  "description": "Generic 3-pin temperature/humidity sensor breakout.",
+  "properties": { "voltage": "3.3V" },
+  "pins": [
+    { "name": "VCC", "type": "male" },
+    { "name": "GND", "type": "male" },
+    { "name": "DATA", "type": "male" }
+  ],
+  "geometry": {
+    "breadboard": { "w": 180, "h": 100, "color": "#1a6fc4", "pins": [[30, 50], [90, 50], [150, 50]] },
+    "schematic":  { "w": 120, "h": 80, "pins": [[10, 20], [60, 20], [110, 20]] },
+    "pcb":        { "w": 100, "h": 70, "padD": 12, "holeD": 4, "pins": [[15, 35], [50, 35], [85, 35]] }
+  }
+}
