@@ -14,10 +14,13 @@ import os
 import subprocess
 import sys
 
-FRITZING_BIN = os.environ.get("FRITZING_APP",
-                              os.path.expanduser("~/code/fritzing/fritzing/Fritzing"))
-QT6_LIBS = os.environ.get("FRITZING_LIBS", os.path.expanduser("~/code/fritzing/qt6-libs"))
-QT6_PLUGINS = os.environ.get("FRITZING_PLUGINS", os.path.expanduser("~/code/fritzing/qt6-plugins"))
+_APP_ROOT = os.environ.get("FRITZING_APP_ROOT") or os.path.expanduser(
+    "~/code/fritzing/fritzing")
+FRITZING_BIN = os.environ.get("FRITZING_APP", os.path.join(_APP_ROOT, "Fritzing"))
+QT6_LIBS = os.environ.get("FRITZING_LIBS",
+                          os.path.join(os.path.dirname(_APP_ROOT), "qt6-libs"))
+QT6_PLUGINS = os.environ.get("FRITZING_PLUGINS",
+                             os.path.join(os.path.dirname(_APP_ROOT), "qt6-plugins"))
 
 VIEW_SUFFIX = {"bb": "breadboard", "sc": "schematic", "pcb": "pcb"}
 

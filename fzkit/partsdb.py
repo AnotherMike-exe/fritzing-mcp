@@ -13,7 +13,8 @@ import os
 import sqlite3
 import xml.etree.ElementTree as ET
 
-APP_ROOT = os.path.expanduser("~/code/fritzing/fritzing")
+APP_ROOT = os.environ.get("FRITZING_APP_ROOT") or os.path.expanduser(
+    "~/code/fritzing/fritzing")
 PARTS_DB = os.path.join(APP_ROOT, "parts", "parts.db")
 LOCAL_PARTS_DIR = os.path.expanduser(
     "~/.local/share/Fritzing/Fritzing/local_parts")
@@ -36,7 +37,9 @@ class Part:
 
 def _connect() -> sqlite3.Connection:
     if not os.path.exists(PARTS_DB):
-        raise FileNotFoundError(f"parts.db not found at {PARTS_DB} — is ~/code/fritzing intact?")
+        raise FileNotFoundError(
+            f"parts.db not found at {PARTS_DB} — set FRITZING_APP_ROOT to your "
+            f"Fritzing app checkout (default ~/code/fritzing/fritzing)")
     return sqlite3.connect(f"file:{PARTS_DB}?mode=ro", uri=True)
 
 

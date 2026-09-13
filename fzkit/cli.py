@@ -14,11 +14,13 @@ import xml.etree.ElementTree as ET
 
 from . import model, partsdb
 
-APP_ROOT = os.path.expanduser("~/code/fritzing/fritzing")
+APP_ROOT = os.environ.get("FRITZING_APP_ROOT") or os.path.expanduser(
+    "~/code/fritzing/fritzing")
+_FZ_BASE = os.path.dirname(APP_ROOT)
 FRITZING_BIN = os.path.join(APP_ROOT, "Fritzing")
-QT6_LIBS = os.path.expanduser("~/code/fritzing/qt6-libs")
-QT6_PLUGINS = os.path.expanduser("~/code/fritzing/qt6-plugins")
-LAUNCHER = os.path.expanduser("~/code/fritzing/run-fritzing.sh")
+QT6_LIBS = os.path.join(_FZ_BASE, "qt6-libs")
+QT6_PLUGINS = os.path.join(_FZ_BASE, "qt6-plugins")
+LAUNCHER = os.path.join(_FZ_BASE, "run-fritzing.sh")
 
 PKG_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEMPLATE = os.path.join(PKG_DIR, "templates", "sketch.fz")
@@ -333,7 +335,7 @@ def build_parser() -> argparse.ArgumentParser:
     ppart = p.add_subparsers(dest="part_cmd", required=True)
     pp = ppart.add_parser("new", help="generate a custom part from a JSON spec")
     pp.add_argument("spec")
-    pp.add_argument("--out", default=os.path.expanduser("~/code/fritzing-ai/parts-out"))
+    pp.add_argument("--out", default=os.path.join(PKG_DIR, "parts-out"))
     pp.add_argument("--install", action="store_true",
                     help="copy into local_parts so the app finds it")
     pp.set_defaults(fn=cmd_part)

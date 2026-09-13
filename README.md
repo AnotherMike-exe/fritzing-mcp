@@ -49,8 +49,10 @@ stdlib-only Fritzing design toolkit for AI agents.
 - Python ≥ 3.10, [uv](https://docs.astral.sh/uv/)
 - The `fz` toolkit is bundled (`fzkit/` + `bin/fz` + `templates/`) — no
   second repo needed. `FZ_BIN` optionally points at a different launcher.
-- Runtime data from a local Fritzing app checkout: part search needs
-  `~/code/fritzing/fritzing/parts/parts.db`, custom-part authoring needs
+- Runtime data from a local Fritzing app checkout, located via
+  `FRITZING_APP_ROOT` (default `~/code/fritzing/fritzing`; render vars
+  `FRITZING_APP`/`FRITZING_LIBS`/`FRITZING_PLUGINS` still win): part search
+  needs `<root>/parts/parts.db`, custom-part authoring needs
   `parts/fzp_checker.py`, and headless rendering needs the Fritzing binary
   with Qt 6 libs plus ImageMagick for PNG. Sketch create/show/check work
   without any of it.

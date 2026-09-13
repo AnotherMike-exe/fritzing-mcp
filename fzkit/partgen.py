@@ -20,9 +20,11 @@ import subprocess
 import sys
 import xml.etree.ElementTree as ET
 
+_APP_ROOT = os.environ.get("FRITZING_APP_ROOT") or os.path.expanduser(
+    "~/code/fritzing/fritzing")
 LOCAL_PARTS_DIR = os.path.expanduser(
     "~/.local/share/Fritzing/Fritzing/local_parts")
-FZP_CHECKER = os.path.expanduser("~/code/fritzing/fritzing/parts/fzp_checker.py")
+FZP_CHECKER = os.path.join(_APP_ROOT, "parts", "fzp_checker.py")
 
 VIEWS = ["breadboard", "schematic", "pcb", "icon"]
 REQUIRED_SPEC_KEYS = ("title", "pins", "geometry")

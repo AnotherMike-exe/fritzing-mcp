@@ -11,9 +11,9 @@ Drive the locally-built Fritzing app (develop branch, Qt 6.11.2) through the `fz
 
 | thing | value |
 |---|---|
-| CLI | `~/code/fritzing-ai/bin/fz` (add `alias fz=~/code/fritzing-ai/bin/fz`) |
-| App | `~/code/fritzing/fritzing/Fritzing` (launcher `~/code/fritzing/run-fritzing.sh`) |
-| Parts DB | `~/code/fritzing/fritzing/parts/parts.db` (2663 parts) |
+| CLI | bundled `bin/fz` in this repo (`FZ_BIN` overrides) |
+| App root | `FRITZING_APP_ROOT` (default `~/code/fritzing/fritzing`) — app at `<root>/Fritzing`, launcher at `../run-fritzing.sh` |
+| Parts DB | `<FRITZING_APP_ROOT>/parts/parts.db` (2663 parts) |
 | Custom parts dir | `~/.local/share/Fritzing/Fritzing/local_parts/<ModuleID>/` |
 | Sketch units | pixels at 90 DPI (1 inch = 90 px; mm→px = 90·mm/25.4) |
 
