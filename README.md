@@ -49,13 +49,20 @@ stdlib-only Fritzing design toolkit for AI agents.
 - Python ≥ 3.10, [uv](https://docs.astral.sh/uv/)
 - The `fz` toolkit is bundled (`fzkit/` + `bin/fz` + `templates/`) — no
   second repo needed. `FZ_BIN` optionally points at a different launcher.
-- Runtime data from a local Fritzing app checkout, located via
-  `FRITZING_APP_ROOT` (default `~/code/fritzing/fritzing`; render vars
-  `FRITZING_APP`/`FRITZING_LIBS`/`FRITZING_PLUGINS` still win): part search
-  needs `<root>/parts/parts.db`, custom-part authoring needs
-  `parts/fzp_checker.py`, and headless rendering needs the Fritzing binary
-  with Qt 6 libs plus ImageMagick for PNG. Sketch create/show/check work
-  without any of it.
+- Runtime data from a local Fritzing app. `fzkit/paths.py` finds it:
+  - **macOS:** `/Applications/Fritzing.app` by default. Parts come from
+    `Contents/Resources/fritzing-parts`, custom parts go to
+    `~/Library/Application Support/Fritzing/Fritzing/local_parts`, and Qt uses `cocoa`.
+  - **Linux:** a source checkout at `~/code/fritzing/fritzing` by default, with
+    `~/.local/share/Fritzing/Fritzing/local_parts` and Qt `wayland`.
+  - `FRITZING_APP_ROOT` selects another checkout, or another bundle if it ends in
+    `.app`. `FRITZING_APP`, `FRITZING_LOCAL_PARTS`, `FRITZING_LIBS`,
+    `FRITZING_PLUGINS` and `QT_QPA_PLATFORM` override single values.
+
+  Part search needs `parts.db`, custom-part checks need `fzp_checker.py`, and
+  headless rendering needs the Fritzing binary plus ImageMagick with the librsvg
+  delegate for PNG (on Homebrew: `imagemagick-full`). Sketch create/show/check
+  work without any of it.
 
 ## Install
 

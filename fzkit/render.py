@@ -14,13 +14,11 @@ import os
 import subprocess
 import sys
 
-_APP_ROOT = os.environ.get("FRITZING_APP_ROOT") or os.path.expanduser(
-    "~/code/fritzing/fritzing")
-FRITZING_BIN = os.environ.get("FRITZING_APP", os.path.join(_APP_ROOT, "Fritzing"))
-QT6_LIBS = os.environ.get("FRITZING_LIBS",
-                          os.path.join(os.path.dirname(_APP_ROOT), "qt6-libs"))
-QT6_PLUGINS = os.environ.get("FRITZING_PLUGINS",
-                             os.path.join(os.path.dirname(_APP_ROOT), "qt6-plugins"))
+from .paths import PATHS
+
+FRITZING_BIN = PATHS.fritzing_bin
+QT6_LIBS = PATHS.qt_libs
+QT6_PLUGINS = PATHS.qt_plugins
 
 VIEW_SUFFIX = {"bb": "breadboard", "sc": "schematic", "pcb": "pcb"}
 
@@ -29,7 +27,7 @@ def _app_env() -> dict[str, str]:
     env = dict(os.environ)
     env["LD_LIBRARY_PATH"] = QT6_LIBS + (":" + env["LD_LIBRARY_PATH"] if env.get("LD_LIBRARY_PATH") else "")
     env["QT_PLUGIN_PATH"] = QT6_PLUGINS + (":" + env["QT_PLUGIN_PATH"] if env.get("QT_PLUGIN_PATH") else "")
-    env.setdefault("QT_QPA_PLATFORM", "wayland")
+    env["QT_QPA_PLATFORM"] = PATHS.qt_platform
     return env
 
 
