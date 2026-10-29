@@ -74,7 +74,7 @@ Spec schema: `title`, `label`, `family`, `tags[]`, `description`, `properties{}`
 
 ## Validation
 
-`bin/fz check <file>` verifies: unique modelIndexes, all moduleIds resolvable (db or local_parts), every instance has ≥1 view, every wire endpoint connector exists on its target. Fix every reported problem before finishing.
+`bin/fz check <file>` verifies: unique modelIndexes, all moduleIds resolvable (db or local_parts), every instance has ≥1 view, every wire endpoint connector exists on its target. It also warns when a breadboard wire crosses a part or passes over a pin it does not use: a wire may enter a part only to reach its own pin, from the nearest edge. Route around parts with `--via` bend points. `--strict` makes the warnings fail. Fix every reported problem before finishing.
 
 ## Format cheat-sheet (for direct XML work)
 

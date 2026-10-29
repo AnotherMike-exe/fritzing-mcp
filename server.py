@@ -183,11 +183,13 @@ def fritzing_show_sketch(file: str) -> str:
 # ----------------------------------------------------------------- validation
 
 @mcp.tool
-def fritzing_check(file: str) -> str:
+def fritzing_check(file: str, strict: bool = False) -> str:
     """Validate a sketch: unique modelIndexes, resolvable moduleIds, every
     instance has >= 1 view, every wire endpoint connector exists on its target.
+    Also warns when a breadboard wire crosses a part or passes over a pin it
+    does not use. strict=True turns those warnings into failures.
     MUST pass before handing a design off or opening it in the GUI."""
-    return _run("check", file)
+    return _run("check", file, *(["--strict"] if strict else []))
 
 
 @mcp.tool

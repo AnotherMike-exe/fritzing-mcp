@@ -65,3 +65,22 @@ class PinPositionTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RouteTest(unittest.TestCase):
+    BOX = (10, 10, 110, 60)  # x0 y0 x1 y1
+
+    def test_size_from_root(self):
+        svg = geometry.ET.fromstring(SVG)
+        self.assertEqual(geometry.svg_size(svg), (90.0, 45.0))
+
+    def test_length_inside(self):
+        f = geometry.length_inside
+        self.assertAlmostEqual(f((0, 30), (200, 30), self.BOX), 100, delta=1.5)  # straight across
+        self.assertAlmostEqual(f((0, 0), (0, 100), self.BOX), 0)       # misses the box
+        self.assertAlmostEqual(f((50, 30), (50, 0), self.BOX), 20, delta=1.5)  # starts inside
+        self.assertAlmostEqual(f((0, 10), (200, 10), self.BOX), 0)     # runs on the edge
+
+    def test_edge_distance(self):
+        self.assertEqual(geometry.edge_distance((15, 30), self.BOX), 5)
+        self.assertEqual(geometry.edge_distance((60, 55), self.BOX), 5)
