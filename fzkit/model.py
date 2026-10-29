@@ -30,6 +30,7 @@ VIEW_TOKENS = {
         "wire_conn": "breadboardWire",
         "part_conn": "breadboardbreadboard",
         "part_layer": "breadboard",
+        "wire_flags": "64",
         "extras": {"mils": "22.2222", "color": "#418dd9", "opacity": "1", "banded": "0"},
     },
     "sc": {
@@ -38,6 +39,7 @@ VIEW_TOKENS = {
         "wire_conn": "schematicTrace",
         "part_conn": "schematic",
         "part_layer": "schematic",
+        "wire_flags": "128",
         "extras": {"mils": "20", "color": "#000000", "opacity": "1", "banded": "0"},
     },
     "pcb": {
@@ -46,6 +48,7 @@ VIEW_TOKENS = {
         "wire_conn": "copper0",
         "part_conn": "copper0",
         "part_layer": "board",
+        "wire_flags": "4",
         "extras": {"mils": "11.1111", "color": "#f28a00", "opacity": "1", "banded": "0"},
     },
 }
@@ -168,50 +171,58 @@ class FzSketch:
             geo.set("y", f"{y:g}")
         return inst
 
-    def add_wire(self, endpoints: list[tuple[str, str, str]], views: list[str],
-                 origin: tuple[float, float],
-                 end_offsets: tuple[tuple[float, float], tuple[float, float]],
-                 color: str | None = None) -> ET.Element:
-        """endpoints = [(wire_connectorId, other_modelIndex, other_connectorId), ...]
-        in connector0/connector1 order; end_offsets[0] pairs with endpoints[0]."""
-        inst = ET.SubElement(self._instances_el(), "instance")
-        inst.set("moduleIdRef", WIRE_MODULE_ID)
-        inst.set("modelIndex", self.next_model_index())
-        inst.set("path", "wire.fzp")
-        ET.SubElement(inst, "title").text = self.unique_title("Wire")
-        views_el = ET.SubElement(inst, "views")
-        (x, y) = origin
-        (x1, y1), (x2, y2) = end_offsets
-        for v in views:
-            tok = VIEW_TOKENS[v]
-            view_el = ET.SubElement(views_el, tok["view"])
+    def add_wire(self, a: tuple[str, str], b: tuple[str, str], view: str,
+                 points: list[tuple[float, float]],
+                 color: str | None = None) -> list[ET.Element]:
+        """Wire part connector a = (modelIndex, connectorId) to b in one view.
+
+        points are absolute sketch px: the start pin, any bend points, the end
+        pin. Fritzing stores a bend point as a chain of wire instances joined
+        end to end, so this returns one instance per segment. Each instance
+        carries the view's wireFlags (64 breadboard, 128 schematic, 4 pcb):
+        Fritzing uses the flag to decide which view a wire belongs to.
+        """
+        if len(points) < 2:
+            raise ValueError("a wire needs at least two points")
+        tok = VIEW_TOKENS[view]
+        chain = []
+        for _ in range(len(points) - 1):
+            inst = ET.SubElement(self._instances_el(), "instance")
+            inst.set("moduleIdRef", WIRE_MODULE_ID)
+            inst.set("modelIndex", self.next_model_index())
+            inst.set("path", "wire.fzp")
+            ET.SubElement(inst, "title").text = self.unique_title("Wire")
+            chain.append(inst)
+        for k, inst in enumerate(chain):
+            (x0, y0), (x1, y1) = points[k], points[k + 1]
+            view_el = ET.SubElement(ET.SubElement(inst, "views"), tok["view"])
             view_el.set("layer", tok["wire_view"])
             geo = ET.SubElement(view_el, "geometry")
-            geo.set("z", "3.50003")
-            geo.set("x", f"{x:g}")
-            geo.set("y", f"{y:g}")
-            geo.set("x1", f"{x1:g}")
-            geo.set("y1", f"{y1:g}")
-            geo.set("x2", f"{x2:g}")
-            geo.set("y2", f"{y2:g}")
-            geo.set("wireFlags", "128")
+            for key, val in (("z", "3.50003"), ("x", f"{x0:g}"), ("y", f"{y0:g}"),
+                             ("x1", "0"), ("y1", "0"), ("x2", f"{x1 - x0:g}"),
+                             ("y2", f"{y1 - y0:g}"), ("wireFlags", tok["wire_flags"])):
+                geo.set(key, val)
             extras = ET.SubElement(view_el, "wireExtras")
-            for k, dv in tok["extras"].items():
-                extras.set(k, color if (k == "color" and color) else dv)
+            for key, dv in tok["extras"].items():
+                extras.set(key, color if (key == "color" and color) else dv)
+            first = (a[0], a[1], tok["part_conn"]) if k == 0 else \
+                (chain[k - 1].get("modelIndex"), "connector1", tok["wire_conn"])
+            last = (b[0], b[1], tok["part_conn"]) if k == len(chain) - 1 else \
+                (chain[k + 1].get("modelIndex"), "connector0", tok["wire_conn"])
             conns = ET.SubElement(view_el, "connectors")
-            for my_conn, other_idx, other_conn in endpoints:
+            for my_conn, (other_idx, other_conn, layer) in (("connector0", first),
+                                                            ("connector1", last)):
                 c = ET.SubElement(conns, "connector")
                 c.set("connectorId", my_conn)
                 c.set("layer", tok["wire_conn"])
                 cgeo = ET.SubElement(c, "geometry")
                 cgeo.set("x", "0")
                 cgeo.set("y", "0")
-                connects = ET.SubElement(c, "connects")
-                connect = ET.SubElement(connects, "connect")
+                connect = ET.SubElement(ET.SubElement(c, "connects"), "connect")
                 connect.set("connectorId", other_conn)
                 connect.set("modelIndex", other_idx)
-                connect.set("layer", tok["part_conn"])
-        return inst
+                connect.set("layer", layer)
+        return chain
 
     def remove_instance(self, ref: str) -> bool:
         inst = self.find_instance(ref)
