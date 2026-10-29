@@ -85,8 +85,10 @@ def local_parts(text: str | None = None) -> list[Part]:
         if props is not None:
             for p in props.findall("property"):
                 if p.get("name") == "family":
-                    family = p.get("value", "")
-        if text and text.lower() not in (module_id + title + label + family).lower():
+                    family = p.get("value") or (p.text or "").strip()
+        tags = [t.text or "" for t in root.iter("tag")]
+        fields = [module_id, title, label, family, *tags]
+        if text and not any(text.lower() in f.lower() for f in fields):
             continue
         results.append(Part(module_id, title, label, family, fzp, "local"))
     return results
