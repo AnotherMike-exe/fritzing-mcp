@@ -249,7 +249,7 @@ def part_new(spec_path: str, out: str, install: bool = False) -> int:
 def validate(fzp_path: str) -> int:
     rc = 0
     if os.path.exists(FZP_CHECKER):
-        proc = subprocess.run(["python3", FZP_CHECKER, fzp_path],
+        proc = subprocess.run([sys.executable, FZP_CHECKER, fzp_path],
                               capture_output=True, text=True, timeout=60)
         out = (proc.stdout + proc.stderr).strip()
         if out:

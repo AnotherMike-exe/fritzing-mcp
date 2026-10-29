@@ -3,8 +3,10 @@ name = "fritzing-mcp"
 version = "0.1.0"
 description = "MCP stdio server: build and edit Fritzing circuit designs (.fzz) and custom parts; bundles the fz toolkit (fzkit + bin/fz)"
 license = "MIT"
+requires-python = ">=3.10"
 dependencies = [
     "fastmcp>=2.9",
+    "lxml>=5",  # fzp_checker.py (Fritzing parts repo) imports it
 ]
 
 [project.scripts]
