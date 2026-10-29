@@ -119,6 +119,14 @@ def connectors(module_id: str) -> list[tuple[str, str, str]]:
     return []
 
 
+def local_part_path(module_id: str) -> str | None:
+    """Absolute .fzp path of a local (custom) part, without touching parts.db."""
+    for part in local_parts():
+        if part.module_id == module_id:
+            return part.path
+    return None
+
+
 def find_part_path(module_id: str) -> str | None:
     """parts.db path (relative to parts root) or absolute local path."""
     con = _connect()

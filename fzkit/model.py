@@ -236,12 +236,33 @@ class FzSketch:
             return ('<?xml version="1.0" encoding="UTF-8"?>\n' + body).encode()
         return body.encode()
 
+    def _bundle_local_parts(self) -> None:
+        """Copy custom parts into the bundle, as the Fritzing app does on save.
+
+        Without them the sketch opens only where the parts are installed.
+        Entries: part.<moduleId>.fzp and svg.<view>.<file>.svg.
+        """
+        from . import partsdb
+        for module_id in {i.get("moduleIdRef") for i in self.instances()}:
+            fzp = partsdb.local_part_path(module_id)
+            if fzp is None:
+                continue
+            with open(fzp, "rb") as f:
+                self.other_entries[f"part.{module_id}.fzp"] = f.read()
+            for layers in ET.parse(fzp).getroot().iter("layers"):
+                image = layers.get("image") or ""
+                svg = os.path.join(os.path.dirname(fzp), image)
+                if "/" in image and os.path.exists(svg):
+                    with open(svg, "rb") as f:
+                        self.other_entries["svg." + image.replace("/", ".", 1)] = f.read()
+
     def save(self, path: str | None = None) -> str:
         path = os.path.abspath(path or self.path)
         data = self.fz_bytes()
         if path.lower().endswith(FZZ_EXT):
             name = os.path.basename(path)
             fz = name[:-1]  # Demo.fzz -> Demo.fz (strip final "z")
+            self._bundle_local_parts()
             with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
                 z.writestr(fz, data)
                 for entry, blob in self.other_entries.items():
