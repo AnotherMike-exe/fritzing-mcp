@@ -47,12 +47,37 @@ def _svg(w: float, h: float, body: str) -> str:
 
 
 def _breadboard_svg(geo: dict, pins: list, group_id: str = "breadboard") -> str:
+    """Breadboard view. Optional style keys in geometry.breadboard:
+
+    pin_r (5), legs (true), stroke ("#0d3c66"), body (raw SVG that replaces the
+    body rect), extra (list of raw SVG drawn under the pins), labels (one
+    {text?, side} per pin, side = left | right | up | down, text defaults to the
+    pin name), label_size (5), label_color ("#ffffff"). Labels use Noto Sans,
+    one of the fonts the Fritzing parts checker accepts.
+    """
     w, h, color = geo.get("w", 180), geo.get("h", 100), geo.get("color", "#1a6fc4")
+    stroke, r = geo.get("stroke", "#0d3c66"), geo.get("pin_r", 5)
     body = [f'  <g id="{group_id}">',
-            f'   <rect x="0" y="0" width="{w:g}" height="{h:g}" rx="8" fill="{color}" stroke="#0d3c66" stroke-width="2"/>']
+            "   " + geo.get("body", f'<rect x="0" y="0" width="{w:g}" height="{h:g}" rx="8" '
+                                    f'fill="{color}" stroke="{stroke}" stroke-width="2"/>')]
+    body += ["   " + e for e in geo.get("extra", [])]
+    size, fill = geo.get("label_size", 5), geo.get("label_color", "#ffffff")
+    for i, ((px, py), lab) in enumerate(zip(geo.get("pins", []), geo.get("labels", []))):
+        text = lab.get("text") or (pins[i].get("name", f"pin{i}") if i < len(pins) else f"pin{i}")
+        font = f'font-family="Noto Sans" font-size="{size:g}" fill="{fill}"'
+        side = lab.get("side", "right")
+        if side in ("up", "down"):
+            dy, anchor = (-r - 2, "start") if side == "up" else (r + 2, "end")
+            body.append(f'   <text transform="translate({px + size * 0.35:g},{py + dy:g}) rotate(-90)" '
+                        f'{font} text-anchor="{anchor}">{text}</text>')
+        else:
+            dx, anchor = (r + 2, "start") if side == "right" else (-r - 2, "end")
+            body.append(f'   <text x="{px + dx:g}" y="{py + size * 0.35:g}" {font} '
+                        f'text-anchor="{anchor}">{text}</text>')
     for i, (px, py) in enumerate(geo.get("pins", [])):
-        body.append(f'   <line x1="{px:g}" y1="{py:g}" x2="{px:g}" y2="{h:g}" stroke="#c9a227" stroke-width="2.5"/>')
-        body.append(f'   <circle id="connector{i}pin" cx="{px:g}" cy="{py:g}" r="5" fill="#c9a227"/>')
+        if geo.get("legs", True):
+            body.append(f'   <line x1="{px:g}" y1="{py:g}" x2="{px:g}" y2="{h:g}" stroke="#c9a227" stroke-width="2.5"/>')
+        body.append(f'   <circle id="connector{i}pin" cx="{px:g}" cy="{py:g}" r="{r:g}" fill="#c9a227"/>')
     body.append('  </g>')
     return _svg(w, h, "\n".join(body))
 
@@ -127,8 +152,7 @@ def _fzp(module_id: str, spec: dict, svg_name: str) -> str:
     return f'''<?xml version="1.0" encoding="UTF-8"?>
 <module fritzingVersion="1.0.8" moduleId="{module_id}">
  <version>1</version>
- <author>AI (fzkit)</author>
- <date>2026-09-06</date>
+ <author>{spec.get("author", "AI (fzkit)")}</author>
  <title>{title}</title>
  <label>{label}</label>
  <date>{date_str}</date>
@@ -168,7 +192,8 @@ def _fzp(module_id: str, spec: dict, svg_name: str) -> str:
 '''
 
 
-def part_new(spec_path: str, out: str, install: bool = False) -> int:
+def part_new(spec_path: str, out: str, install: bool = False, flat: bool = False) -> int:
+    """Generate a part into <out>/<moduleId>/, or straight into <out>/ with flat."""
     with open(spec_path) as f:
         spec = json.load(f)
     missing = [k for k in REQUIRED_SPEC_KEYS if k not in spec]
@@ -191,7 +216,7 @@ def part_new(spec_path: str, out: str, install: bool = False) -> int:
 
     module_id = _module_id(spec["title"], pins)
     svg_name = f"{_slug(spec['title'])}.svg"
-    part_dir = os.path.join(os.path.abspath(out), module_id)
+    part_dir = os.path.abspath(out) if flat else os.path.join(os.path.abspath(out), module_id)
     os.makedirs(part_dir, exist_ok=True)
     for view in VIEWS:
         os.makedirs(os.path.join(part_dir, view), exist_ok=True)

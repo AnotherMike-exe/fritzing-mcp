@@ -287,7 +287,7 @@ def cmd_render(args) -> int:
 def cmd_part(args) -> int:
     from . import partgen
     if args.part_cmd == "new":
-        return partgen.part_new(args.spec, out=args.out, install=args.install)
+        return partgen.part_new(args.spec, out=args.out, install=args.install, flat=args.flat)
     return partgen.validate(args.fzp)
 
 
@@ -385,6 +385,8 @@ def build_parser() -> argparse.ArgumentParser:
     pp.add_argument("--out", default=os.path.join(PKG_DIR, "parts-out"))
     pp.add_argument("--install", action="store_true",
                     help="copy into local_parts so the app finds it")
+    pp.add_argument("--flat", action="store_true",
+                    help="write into --out itself, not --out/<moduleId>/")
     pp.set_defaults(fn=cmd_part)
     pv = ppart.add_parser("validate", help="validate a .fzp file")
     pv.add_argument("fzp")
