@@ -272,7 +272,7 @@ def cmd_show(args) -> int:
 
 def cmd_check(args) -> int:
     from . import check
-    return check.check(args.file)
+    return check.check(args.file, strict=args.strict)
 
 
 def cmd_render(args) -> int:
@@ -369,6 +369,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = sub.add_parser("check", help="validate a sketch")
     p.add_argument("file")
+    p.add_argument("--strict", action="store_true",
+                   help="fail on route warnings (a wire that crosses a part)")
     p.set_defaults(fn=cmd_check)
 
     p = sub.add_parser("render", help="headless-render sketch(es) to SVG (+PNG)")

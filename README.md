@@ -28,7 +28,7 @@ stdlib-only Fritzing design toolkit for AI agents.
 
 | tool | purpose |
 |---|---|
-| `fritzing_check` | validate sketch (must pass before hand-off) |
+| `fritzing_check` | validate sketch (must pass before hand-off). Warns when a wire crosses a part; `strict` makes that fail |
 | `fritzing_render` | headless-render SVG/PNG for visual inspection |
 
 **Custom parts**

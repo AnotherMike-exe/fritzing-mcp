@@ -143,3 +143,34 @@ def view_image(fzp: str | ET.Element, view: str = "breadboard") -> str | None:
     root = ET.parse(fzp).getroot() if isinstance(fzp, str) else fzp
     layers = root.find(f"views/{VIEW_TAGS[view]}/layers")
     return layers.get("image") if layers is not None else None
+
+
+def svg_size(svg: ET.Element) -> tuple[float, float] | None:
+    """(width, height) of a part's view SVG in 90 DPI px."""
+    w, h = _length_px(svg.get("width")), _length_px(svg.get("height"))
+    return (w, h) if w and h else None
+
+
+def length_inside(p: tuple[float, float], q: tuple[float, float],
+                  box: tuple[float, float, float, float], inset: float = 0.5) -> float:
+    """Length of segment p-q inside box (x0, y0, x1, y1), shrunk by inset.
+
+    The inset keeps a wire that only runs along the edge of a part from
+    counting as inside it.
+    """
+    x0, y0, x1, y1 = box[0] + inset, box[1] + inset, box[2] - inset, box[3] - inset
+    dx, dy = q[0] - p[0], q[1] - p[1]
+    lo, hi = 0.0, 1.0
+    for d, start, low, high in ((dx, p[0], x0, x1), (dy, p[1], y0, y1)):
+        if d == 0:
+            if not low < start < high:
+                return 0.0
+            continue
+        t0, t1 = (low - start) / d, (high - start) / d
+        lo, hi = max(lo, min(t0, t1)), min(hi, max(t0, t1))
+    return max(0.0, hi - lo) * math.hypot(dx, dy)
+
+
+def edge_distance(pt: tuple[float, float], box: tuple[float, float, float, float]) -> float:
+    """Distance from a point inside box to the nearest edge of the box."""
+    return min(pt[0] - box[0], box[2] - pt[0], pt[1] - box[1], box[3] - pt[1])
