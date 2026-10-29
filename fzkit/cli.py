@@ -101,6 +101,55 @@ def cmd_place(args) -> int:
     return 0
 
 
+VIEW_NAMES = {"bb": "breadboard", "sc": "schematic", "pcb": "pcb"}
+
+
+def _part_xml(sketch: model.FzSketch, module_id: str, view: str):
+    """(fzp root, view SVG root) from local_parts, the library, or the bundle."""
+    from . import geometry
+    from .paths import PATHS
+    path = partsdb.find_part_path(module_id)
+    if path:
+        full = path if os.path.isabs(path) else os.path.join(PATHS.parts_root, path)
+        image = geometry.view_image(full, view)
+        svg = geometry.svg_path(PATHS.parts_root, path, image) if image else None
+        if svg and os.path.exists(svg):
+            return ET.parse(full).getroot(), ET.parse(svg).getroot()
+    blob = sketch.other_entries.get(f"part.{module_id}.fzp")
+    if blob:
+        fzp = ET.fromstring(blob)
+        image = geometry.view_image(fzp, view)
+        svg = sketch.other_entries.get("svg." + image.replace("/", ".", 1)) if image else None
+        if svg:
+            return fzp, ET.fromstring(svg)
+    return None
+
+
+def _pin_xy(sketch, cache, inst, conn_id, view):
+    """Absolute px of a connector, or the part origin if the SVG has no such pin."""
+    from . import geometry
+    view_el = inst.find(f"views/{model.VIEW_TOKENS[view]['view']}")
+    geo = view_el.find("geometry") if view_el is not None else None
+    if geo is None or geo.get("x") is None:
+        ox, oy = model.FzSketch.instance_pos(inst)
+    else:
+        ox, oy = float(geo.get("x")), float(geo.get("y"))
+    module_id = inst.get("moduleIdRef")
+    key = (module_id, view)
+    if key not in cache:
+        xml = _part_xml(sketch, module_id, VIEW_NAMES[view])
+        cache[key] = geometry.pin_positions_xml(*xml, VIEW_NAMES[view]) if xml else {}
+    if geo is not None and geo.find("transform") is not None:
+        print(f"warning: {inst.findtext('title')} is rotated; wire ends use the unrotated pin",
+              file=sys.stderr)
+    pin = cache[key].get(conn_id)
+    if pin is None:
+        print(f"warning: no {VIEW_NAMES[view]} position for {inst.findtext('title')}.{conn_id}; "
+              f"the wire ends at the part origin", file=sys.stderr)
+        return ox, oy
+    return ox + pin[0], oy + pin[1]
+
+
 def cmd_wire(args) -> int:
     sketch = model.FzSketch(args.file)
     ref_a, conn_a = args.ref_a.split(".", 1)
@@ -108,20 +157,20 @@ def cmd_wire(args) -> int:
     inst_a = _require_instance(sketch, ref_a)
     inst_b = _require_instance(sketch, ref_b)
     views = model.resolve_view_token(args.view or "bb")
-    x_a, y_a = model.FzSketch.instance_pos(inst_a)
-    x_b, y_b = model.FzSketch.instance_pos(inst_b)
-    origin = ((x_a + x_b) / 2, (y_a + y_b) / 2)
-    end_offsets = ((x_a - origin[0], y_a - origin[1]),   # endpoint 1 -> A (connector1)
-                   (x_b - origin[0], y_b - origin[1]))   # endpoint 2 -> B (connector0)
-    wire = sketch.add_wire(
-        endpoints=[("connector0", inst_b.get("modelIndex"), conn_b),
-                   ("connector1", inst_a.get("modelIndex"), conn_a)],
-        views=views, origin=origin, end_offsets=end_offsets,
-        color=args.color,
-    )
+    via = [tuple(float(n) for n in v.split(",")) for v in args.via or []]
+    cache: dict = {}
+    made = []
+    for view in views:
+        pts = [_pin_xy(sketch, cache, inst_a, conn_a, view),
+               *(via if view == "bb" else []),
+               _pin_xy(sketch, cache, inst_b, conn_b, view)]
+        made += sketch.add_wire((inst_a.get("modelIndex"), conn_a),
+                                (inst_b.get("modelIndex"), conn_b),
+                                view, pts, color=args.color)
     sketch.save()
     print(f"wired {args.ref_a} <-> {args.ref_b} "
-          f"(modelIndex {wire.get('modelIndex')}, views {','.join(views)})")
+          f"({len(made)} segment(s): {', '.join(w.findtext('title') for w in made)}; "
+          f"views {','.join(views)})")
     return 0
 
 
@@ -291,6 +340,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("ref_b")
     p.add_argument("--view", default="bb", help="bb|sc|pcb|all (default bb)")
     p.add_argument("--color")
+    p.add_argument("--via", action="append", metavar="X,Y",
+                   help="breadboard bend point in absolute px; repeat in path order")
     p.set_defaults(fn=cmd_wire)
 
     p = sub.add_parser("move", help="move an instance")
