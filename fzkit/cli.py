@@ -14,13 +14,9 @@ import xml.etree.ElementTree as ET
 
 from . import model, partsdb
 
-APP_ROOT = os.environ.get("FRITZING_APP_ROOT") or os.path.expanduser(
-    "~/code/fritzing/fritzing")
-_FZ_BASE = os.path.dirname(APP_ROOT)
-FRITZING_BIN = os.path.join(APP_ROOT, "Fritzing")
-QT6_LIBS = os.path.join(_FZ_BASE, "qt6-libs")
-QT6_PLUGINS = os.path.join(_FZ_BASE, "qt6-plugins")
-LAUNCHER = os.path.join(_FZ_BASE, "run-fritzing.sh")
+from .paths import PATHS
+
+LAUNCHER = PATHS.launcher
 
 PKG_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEMPLATE = os.path.join(PKG_DIR, "templates", "sketch.fz")
@@ -250,11 +246,11 @@ def cmd_part(args) -> int:
 
 
 def cmd_open(args) -> int:
-    if not os.path.exists(LAUNCHER):
-        print(f"error: launcher missing at {LAUNCHER}", file=sys.stderr)
+    if not os.path.exists(LAUNCHER[-1]):
+        print(f"error: launcher missing at {LAUNCHER[-1]}", file=sys.stderr)
         return 1
-    subprocess.Popen([LAUNCHER] + [os.path.abspath(f) for f in args.files])
-    print(f"launching {LAUNCHER} {args.files}")
+    subprocess.Popen(LAUNCHER + [os.path.abspath(f) for f in args.files])
+    print(f"launching {' '.join(LAUNCHER)} {args.files}")
     return 0
 
 
