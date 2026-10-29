@@ -178,7 +178,7 @@ class FzSketch:
         inst.set("moduleIdRef", WIRE_MODULE_ID)
         inst.set("modelIndex", self.next_model_index())
         inst.set("path", "wire.fzp")
-        ET.SubElement(inst, "title").text = f"Wire{len(self.instances())}"
+        ET.SubElement(inst, "title").text = self.unique_title("Wire")
         views_el = ET.SubElement(inst, "views")
         (x, y) = origin
         (x1, y1), (x2, y2) = end_offsets
