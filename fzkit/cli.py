@@ -126,8 +126,14 @@ def _part_xml(sketch: model.FzSketch, module_id: str, view: str):
 
 
 def _pin_xy(sketch, cache, inst, conn_id, view):
-    """Absolute px of a connector, or the part origin if the SVG has no such pin."""
+    """Absolute px of a connector, or the part origin if the SVG has no such pin.
+
+    For a wire, the connector is a wire end: connector0 is the start,
+    connector1 the end.
+    """
     from . import geometry
+    if inst.get("moduleIdRef") == model.WIRE_MODULE_ID:
+        return sketch.wire_end(inst, conn_id, view)
     view_el = inst.find(f"views/{model.VIEW_TOKENS[view]['view']}")
     geo = view_el.find("geometry") if view_el is not None else None
     if geo is None or geo.get("x") is None:
