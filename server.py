@@ -136,6 +136,10 @@ def fritzing_wire(
 ) -> str:
     """Wire two part connectors together (creates the electrical <connect>).
 
+    An end can also be a wire end, 'Wire7.connector1': the new wire branches
+    from that end or bend point. Use a branch for one signal that goes to
+    several pins, for example GND. Wire titles are in fritzing_show_sketch.
+
     The wire ends on the real pin positions from each part's SVG. Bend points
     become a chain of wire segments, as the Fritzing app stores them. Each
     view gets its own wire; `via` applies to the breadboard view only.
