@@ -53,6 +53,11 @@ stdlib-only Fritzing design toolkit for AI agents.
   - **macOS:** `/Applications/Fritzing.app` by default. Parts come from
     `Contents/Resources/fritzing-parts`, custom parts go to
     `~/Library/Application Support/Fritzing/Fritzing/local_parts`, and Qt uses `cocoa`.
+    The bundle has no offscreen Qt plugin, so a render opens a window for about
+    2 seconds. Keep the mouse pointer off it: a hover on a wire crashes Fritzing 1.0.8.
+    After a crash, macOS shows a modal "reopen windows?" alert at each start, and
+    every render hangs on it. Turn that alert off once:
+    `defaults write org.fritzing.Fritzing ApplePersistenceIgnoreState -bool YES`
   - **Linux:** a source checkout at `~/code/fritzing/fritzing` by default, with
     `~/.local/share/Fritzing/Fritzing/local_parts` and Qt `wayland`.
   - `FRITZING_APP_ROOT` selects another checkout, or another bundle if it ends in
