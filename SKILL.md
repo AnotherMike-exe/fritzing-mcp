@@ -24,7 +24,7 @@ All Python, no dependencies. ImageMagick (`magick`) is used for PNG rasterizing.
 Iterate: **new → parts → place → wire → render → look → adjust**.
 
 ```bash
-cd ~/code/fritzing-ai
+cd ~/Developer/Forks/fritzing-ai
 bin/fz new /tmp/design/demo.fzz                    # empty sketch
 bin/fz parts --query "resistor" --limit 10         # find parts (also scans local custom parts)
 bin/fz place /tmp/design/demo.fzz ResistorModuleID --x 300 --y 250 --ref r1 --prop resistance=220
